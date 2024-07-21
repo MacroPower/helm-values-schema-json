@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"strings"
 
@@ -37,7 +39,7 @@ func GenerateJsonSchema(config *Config) error {
 
 	// Iterate over the input YAML files
 	for _, filePath := range config.Input {
-		content, err := os.ReadFile(filePath)
+		content, err := getFileContent(filePath)
 		if err != nil {
 			return errors.New("error reading YAML file(s)")
 		}
@@ -129,4 +131,30 @@ func setAdditionalProperties(s *Schema, value bool) {
 			}
 		}
 	}
+}
+
+func getFileContent(filePath string) ([]byte, error) {
+	if isURL(filePath) {
+		return downloadFile(filePath)
+	} else {
+		return os.ReadFile(filePath)
+	}
+}
+
+func isURL(path string) bool {
+	return strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://")
+}
+
+func downloadFile(url string) ([]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to download file: %s", resp.Status)
+	}
+
+	return io.ReadAll(resp.Body)
 }
