@@ -27,6 +27,9 @@ func ParseFlags(progname string, args []string) (*Config, string, error) {
 	flags.StringVar(&conf.SchemaRoot.Description, "schemaRoot.description", "", "JSON schema description")
 	flags.Var(&conf.SchemaRoot.AdditionalProperties, "schemaRoot.additionalProperties", "Allow additional properties")
 
+	// Nested SchemaAll flags
+	flags.Var(&conf.SchemaAll.AdditionalProperties, "schema.additionalProperties", "Allow additional properties")
+
 	err := flags.Parse(args)
 	if err != nil {
 		fmt.Println("Usage: helm schema [options...] <arguments>")
@@ -98,6 +101,9 @@ func MergeConfig(fileConfig, flagConfig *Config) *Config {
 	}
 	if flagConfig.SchemaRoot.AdditionalProperties.IsSet() {
 		mergedConfig.SchemaRoot.AdditionalProperties = flagConfig.SchemaRoot.AdditionalProperties
+	}
+	if flagConfig.SchemaAll.AdditionalProperties.IsSet() {
+		mergedConfig.SchemaAll.AdditionalProperties = flagConfig.SchemaAll.AdditionalProperties
 	}
 	mergedConfig.Args = flagConfig.Args
 

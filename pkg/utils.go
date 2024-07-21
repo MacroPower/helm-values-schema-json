@@ -14,6 +14,10 @@ type SchemaRoot struct {
 	AdditionalProperties BoolFlag `yaml:"additionalProperties"`
 }
 
+type SchemaAll struct {
+	AdditionalProperties BoolFlag `yaml:"additionalProperties"`
+}
+
 // Save values of parsed flags in Config
 type Config struct {
 	Input      multiStringFlag `yaml:"input"`
@@ -22,6 +26,7 @@ type Config struct {
 	Indent     int             `yaml:"indent"`
 
 	SchemaRoot SchemaRoot `yaml:"schemaRoot"`
+	SchemaAll  SchemaAll  `yaml:"schema"`
 
 	Args []string `yaml:"-"`
 

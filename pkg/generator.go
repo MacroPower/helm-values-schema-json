@@ -80,16 +80,20 @@ func GenerateJsonSchema(config *Config) error {
 		mergedSchema.Required = uniqueStringAppend(mergedSchema.Required, required...)
 	}
 
+	if config.SchemaRoot.AdditionalProperties.IsSet() {
+		schemaRootAdditionalProperties := config.SchemaRoot.AdditionalProperties.Value()
+		mergedSchema.AdditionalProperties = &schemaRootAdditionalProperties
+	}
+	if config.SchemaAll.AdditionalProperties.IsSet() {
+		setAdditionalProperties(mergedSchema, config.SchemaAll.AdditionalProperties.Value())
+	}
+
 	// Convert merged Schema into a JSON Schema compliant map
 	jsonSchemaMap, err := convertSchemaToMap(mergedSchema)
 	if err != nil {
 		return err
 	}
 	jsonSchemaMap["$schema"] = schemaURL // Include the schema draft version
-
-	if config.SchemaRoot.AdditionalProperties.IsSet() {
-		jsonSchemaMap["additionalProperties"] = config.SchemaRoot.AdditionalProperties.Value()
-	}
 
 	// If validation is successful, marshal the schema and save to the file
 	jsonBytes, err := json.MarshalIndent(jsonSchemaMap, "", indentString)
@@ -107,4 +111,22 @@ func GenerateJsonSchema(config *Config) error {
 	fmt.Println("JSON schema successfully generated")
 
 	return nil
+}
+
+func setAdditionalProperties(s *Schema, value bool) {
+	if s.Type == "object" {
+		s.AdditionalProperties = &value
+	}
+	for _, v := range s.Properties {
+		if v != nil {
+			setAdditionalProperties(v, value)
+		}
+	}
+	if s.Items != nil {
+		for _, v := range s.Items.Properties {
+			if v != nil {
+				setAdditionalProperties(v, value)
+			}
+		}
+	}
 }
